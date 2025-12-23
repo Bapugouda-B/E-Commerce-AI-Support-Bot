@@ -1,0 +1,21 @@
+# Web backend
+flask==2.3.3
+flask-cors==3.0.10
+
+# LangChain (Python 3.9 compatible & stable)
+langchain==0.1.14
+langchain-community==0.0.34
+
+# HuggingFace + models
+transformers==4.38.2
+sentence-transformers==2.5.1
+torch==2.1.2
+
+# Vector database
+faiss-cpu==1.7.4
+
+# Core dependencies
+typing-extensions==4.9.0
+
+# Performance helpers
+accelerate==0.26.1
