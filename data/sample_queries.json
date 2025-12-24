@@ -1,0 +1,8 @@
+[
+  { "query": "Where is my order ORD123?", "intent": "ORDER_STATUS" },
+  { "query": "Track my order ORD456", "intent": "ORDER_STATUS" },
+  { "query": "I want to return order ORD789", "intent": "RETURN" },
+  { "query": "How long does refund take?", "intent": "REFUND_POLICY" },
+  { "query": "Money deducted but order not placed", "intent": "PAYMENT_ISSUE" },
+  { "query": "Explain photosynthesis", "intent": "OUT_OF_SCOPE" }
+]

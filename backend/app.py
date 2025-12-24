@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from backend.mock_tools import get_order_status, create_return_request, get_refund_policy
 
@@ -6,7 +6,7 @@ from llm.llm_loader import load_llm
 from rag.vectorstore import load_vectorstore
 from agents.agent_router import create_agent
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="../templates", static_folder="../static")
 CORS(app)
 
 print("Initializing system...")
@@ -19,15 +19,7 @@ print("System is ready")
 
 @app.route("/")
 def home():
-    return render_template_string("""
-        <html>
-          <head><title>Ecommerce AI Bot</title></head>
-          <body>
-            <h1>Ecommerce AI Bot API</h1>
-            <p>Backend is running on localhost.</p>
-          </body>
-        </html>
-    """)
+    return render_template("index.html")
 
 @app.route("/chat", methods=["POST"])
 def chat():

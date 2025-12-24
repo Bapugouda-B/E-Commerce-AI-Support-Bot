@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>E‑Commerce AI Assistant</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="chat-widget">
+      <!-- Header -->
+      <div class="chat-header">
+        <div class="chat-header-left">
+          <div class="bot-avatar">🛒</div>
+          <div>
+            <div class="chat-title">E‑Commerce AI Assistant</div>
+            <div class="chat-subtitle">
+              Ask anything about your orders & products
+            </div>
+          </div>
+        </div>
+        <div class="chat-close-icon">×</div>
+      </div>
+
+      <!-- Greeting / quick actions -->
+      <div class="chat-body">
+        <div class="greeting">
+          <div class="greeting-title">Hi! I’m your shopping assistant.</div>
+          <div class="greeting-text">How can I help you today?</div>
+        </div>
+        <div class="quick-actions">
+          <button class="quick-btn" data-question="Help me find a product">
+            Find a product
+          </button>
+          <button class="quick-btn" data-question="Where is my order?">
+            Track my order
+          </button>
+          <button class="quick-btn" data-question="I want to modify my order">
+            Modify my order
+          </button>
+          <button
+            class="quick-btn"
+            data-question="Tell me about discounts and offers"
+          >
+            Offers & discounts
+          </button>
+          <button
+            class="quick-btn"
+            data-question="I have an issue with my payment"
+          >
+            Payment issue
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div id="chat-box"></div>
+
+      <!-- Input -->
+      <div class="chat-input-area">
+        <input
+          type="text"
+          id="user-input"
+          placeholder="Type your message..."
+          autocomplete="off"
+        />
+        <button id="send-btn" onclick="sendMessage()">
+          Send
+          <span class="send-icon">➤</span>
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const chatBox = document.getElementById("chat-box");
+      const userInput = document.getElementById("user-input");
+      const sendBtn = document.getElementById("send-btn");
+      const quickButtons = document.querySelectorAll(".quick-btn");
+
+      function appendMessage(sender, text) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "message " + (sender === "You" ? "user" : "bot");
+
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+
+        const label = document.createElement("span");
+        label.className = "sender-label";
+        label.textContent = sender + ":";
+
+        const content = document.createElement("span");
+        content.textContent = " " + text;
+
+        bubble.appendChild(label);
+        bubble.appendChild(content);
+        wrapper.appendChild(bubble);
+
+        chatBox.appendChild(wrapper);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+
+      async function sendMessage(messageFromQuickBtn) {
+        const message =
+          messageFromQuickBtn !== undefined
+            ? messageFromQuickBtn
+            : userInput.value.trim();
+
+        if (!message) return;
+
+        appendMessage("You", message);
+        userInput.value = "";
+
+        const typing = document.createElement("div");
+        typing.className = "typing-indicator";
+        typing.textContent = "Assistant is typing...";
+        chatBox.appendChild(typing);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        try {
+          const response = await fetch("/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: message }),
+          });
+
+          const data = await response.json();
+          chatBox.removeChild(typing);
+          appendMessage("Bot", data.response);
+        } catch (err) {
+          chatBox.removeChild(typing);
+          appendMessage(
+            "Bot",
+            "Sorry, something went wrong. Please try again."
+          );
+        }
+      }
+
+      userInput.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+          sendMessage();
+        }
+      });
+
+      quickButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const q = btn.getAttribute("data-question");
+          sendMessage(q);
+        });
+      });
+    </script>
+  </body>
+</html>
