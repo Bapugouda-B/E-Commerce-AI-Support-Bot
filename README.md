@@ -56,7 +56,7 @@ This project implements an intelligent customer support assistant using:
 
 ### Run the application
 
-`python -m backend/app.py`
+`python -m backend.app`
 `The bot will be available at: `http://localhost:5000`
 
 ### RAG Pipeline
