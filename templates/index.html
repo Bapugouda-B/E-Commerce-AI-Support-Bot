@@ -2,10 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>E‑Commerce AI Assistant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>E-Commerce AI Assistant</title>
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
     />
     <link
       rel="stylesheet"
@@ -17,92 +18,169 @@
       <!-- Header -->
       <div class="chat-header">
         <div class="chat-header-left">
-          <div class="bot-avatar">🛒</div>
+          <div class="bot-avatar">🤖</div>
           <div>
-            <div class="chat-title">E‑Commerce AI Assistant</div>
-            <div class="chat-subtitle">
-              Ask anything about your orders & products
-            </div>
+            <div class="chat-title">E-Commerce AI Assistant</div>
+            <div class="chat-subtitle">Available 24/7 • Instant Responses</div>
           </div>
         </div>
-        <div class="chat-close-icon">×</div>
+        <button class="chat-close-icon" onclick="closeChat()">×</button>
       </div>
 
-      <!-- Greeting / quick actions -->
-      <div class="chat-body">
-        <div class="greeting">
-          <div class="greeting-title">Hi! I’m your shopping assistant.</div>
-          <div class="greeting-text">How can I help you today?</div>
+      <!-- Chat Body with Messages -->
+      <div class="chat-body-wrapper">
+        <div class="chat-body">
+          <div class="greeting">
+            <div class="greeting-icon">🛍️</div>
+            <div class="greeting-title">Welcome to Our Store!</div>
+            <div class="greeting-text">I'm your 24/7 Shopping Assistant</div>
+          </div>
+          <div class="quick-actions">
+            <button
+              class="quick-btn"
+              data-question="Track my order"
+              title="Check order status"
+            >
+              📦 Track Order
+            </button>
+            <button
+              class="quick-btn"
+              data-question="I want to return an item"
+              title="Start a return"
+            >
+              ↩️ Start Return
+            </button>
+            <button
+              class="quick-btn"
+              data-question="Tell me about discounts"
+              title="View offers"
+            >
+              🎟️ Discounts
+            </button>
+            <button
+              class="quick-btn"
+              data-question="I have a payment issue"
+              title="Payment help"
+            >
+              💳 Payment Help
+            </button>
+            <button
+              class="quick-btn"
+              data-question="Find products for me"
+              title="Product search"
+            >
+              🔍 Find Products
+            </button>
+            <button class="quick-btn" data-question="Help" title="Get started">
+              ❓ Get Help
+            </button>
+          </div>
         </div>
-        <div class="quick-actions">
-          <button class="quick-btn" data-question="Help me find a product">
-            Find a product
-          </button>
-          <button class="quick-btn" data-question="Where is my order?">
-            Track my order
-          </button>
-          <button class="quick-btn" data-question="I want to modify my order">
-            Modify my order
-          </button>
-          <button
-            class="quick-btn"
-            data-question="Tell me about discounts and offers"
-          >
-            Offers & discounts
-          </button>
-          <button
-            class="quick-btn"
-            data-question="I have an issue with my payment"
-          >
-            Payment issue
-          </button>
-        </div>
+
+        <!-- Messages Area -->
+        <div id="chat-box" class="chat-messages"></div>
       </div>
 
-      <!-- Messages -->
-      <div id="chat-box"></div>
-
-      <!-- Input -->
+      <!-- Input Area -->
       <div class="chat-input-area">
         <input
           type="text"
           id="user-input"
-          placeholder="Type your message..."
+          placeholder="Type your question here..."
           autocomplete="off"
+          aria-label="Chat input"
         />
-        <button id="send-btn" onclick="sendMessage()">
+        <button id="send-btn" onclick="sendMessage()" aria-label="Send message">
           Send
-          <span class="send-icon">➤</span>
         </button>
       </div>
+
+      <!-- Feedback Section (hidden by default) -->
+      <div id="feedback-section" class="feedback-section" style="display: none">
+        <div class="feedback-prompt">Was this helpful?</div>
+        <div class="feedback-buttons">
+          <button
+            class="feedback-btn positive"
+            onclick="submitFeedback(true)"
+            title="Yes, this was helpful"
+          >
+            👍 Yes
+          </button>
+          <button
+            class="feedback-btn negative"
+            onclick="submitFeedback(false)"
+            title="No, not helpful"
+          >
+            👎 No
+          </button>
+        </div>
+      </div>
     </div>
+
+    <!-- Status Indicator -->
+    <div id="status-indicator" class="status-online">🟢 Online</div>
 
     <script>
       const chatBox = document.getElementById("chat-box");
       const userInput = document.getElementById("user-input");
       const sendBtn = document.getElementById("send-btn");
       const quickButtons = document.querySelectorAll(".quick-btn");
+      const feedbackSection = document.getElementById("feedback-section");
+      let lastMessageId = null;
+      let conversationCount = 0;
 
-      function appendMessage(sender, text) {
+      // Initialize
+      window.addEventListener("load", () => {
+        userInput.focus();
+      });
+
+      function appendMessage(sender, text, messageId) {
         const wrapper = document.createElement("div");
-        wrapper.className = "message " + (sender === "You" ? "user" : "bot");
+        wrapper.className =
+          "message " + (sender === "You" ? "user-message" : "bot-message");
+        wrapper.id = `msg-${messageId}`;
 
         const bubble = document.createElement("div");
         bubble.className = "bubble";
 
-        const label = document.createElement("span");
-        label.className = "sender-label";
-        label.textContent = sender + ":";
+        if (sender !== "You") {
+          // Parse markdown-like formatting
+          const formattedText = parseMarkdown(text);
+          bubble.innerHTML = formattedText;
+        } else {
+          bubble.textContent = text;
+        }
 
-        const content = document.createElement("span");
-        content.textContent = " " + text;
-
-        bubble.appendChild(label);
-        bubble.appendChild(content);
         wrapper.appendChild(bubble);
-
         chatBox.appendChild(wrapper);
         chatBox.scrollTop = chatBox.scrollHeight;
+        lastMessageId = messageId;
+      }
+
+      function parseMarkdown(text) {
+        // Convert markdown-style text to HTML
+        let html = text;
+
+        // Bold: **text** → <strong>
+        html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+
+        // Links: [text](url) → <a>
+        html = html.replace(
+          /\[(.*?)\]\((.*?)\)/g,
+          '<a href="$2" target="_blank">$1</a>'
+        );
+
+        // Line breaks
+        html = html.replace(/\n/g, "<br>");
+
+        // Bullet points
+        html = html.replace(/^• (.*?)$/gm, "<li>$1</li>");
+        html = html.replace(/^(\d+)\. (.*?)$/gm, "<li>$2</li>");
+        html = html.replace(/(<li>.*?<\/li>)/s, "<ul>$1</ul>");
+        html = html.replace(/<\/ul><ul>/g, "");
+
+        // Emojis (already there, just preserve)
+        return html;
       }
 
       async function sendMessage(messageFromQuickBtn) {
@@ -111,16 +189,28 @@
             ? messageFromQuickBtn
             : userInput.value.trim();
 
-        if (!message) return;
+        if (!message) {
+          userInput.focus();
+          return;
+        }
 
-        appendMessage("You", message);
+        // User message
+        appendMessage("You", message, `user-${conversationCount}`);
         userInput.value = "";
+        conversationCount++;
 
+        // Typing indicator
+        const typingId = `typing-${conversationCount}`;
         const typing = document.createElement("div");
         typing.className = "typing-indicator";
-        typing.textContent = "Assistant is typing...";
+        typing.id = typingId;
+        typing.innerHTML = "<span></span><span></span><span></span>";
+        typing.title = "Assistant is typing...";
         chatBox.appendChild(typing);
         chatBox.scrollTop = chatBox.scrollHeight;
+
+        sendBtn.disabled = true;
+        userInput.disabled = true;
 
         try {
           const response = await fetch("/chat", {
@@ -129,20 +219,84 @@
             body: JSON.stringify({ query: message }),
           });
 
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
           const data = await response.json();
-          chatBox.removeChild(typing);
-          appendMessage("Bot", data.response);
-        } catch (err) {
-          chatBox.removeChild(typing);
+
+          // Remove typing indicator
+          const typingElement = document.getElementById(typingId);
+          if (typingElement) {
+            typingElement.remove();
+          }
+
+          // Bot response
+          const botMessageId = `bot-${conversationCount}`;
           appendMessage(
             "Bot",
-            "Sorry, something went wrong. Please try again."
+            data.response || "No response received",
+            botMessageId
           );
+          conversationCount++;
+
+          // Show feedback after every 3 messages
+          if (conversationCount % 6 === 0) {
+            showFeedback(botMessageId);
+          }
+        } catch (err) {
+          console.error("Error:", err);
+          const typingElement = document.getElementById(typingId);
+          if (typingElement) {
+            typingElement.remove();
+          }
+          appendMessage(
+            "Bot",
+            "Sorry, something went wrong. Please try again or contact support.",
+            `error-${conversationCount}`
+          );
+          conversationCount++;
+        } finally {
+          sendBtn.disabled = false;
+          userInput.disabled = false;
+          userInput.focus();
         }
       }
 
+      function showFeedback(messageId) {
+        feedbackSection.style.display = "flex";
+        feedbackSection.dataset.messageId = messageId;
+      }
+
+      function submitFeedback(isHelpful) {
+        const messageId = feedbackSection.dataset.messageId;
+        console.log(
+          `Feedback for ${messageId}: ${isHelpful ? "Helpful" : "Not helpful"}`
+        );
+        feedbackSection.style.display = "none";
+
+        // Optional: send to backend for analytics
+        fetch("/api/feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message_id: messageId,
+            helpful: isHelpful,
+            timestamp: new Date().toISOString(),
+          }),
+        }).catch((e) => console.error("Feedback error:", e));
+      }
+
+      function closeChat() {
+        if (confirm("Close the chat? You can reopen it anytime.")) {
+          document.querySelector(".chat-widget").style.display = "none";
+        }
+      }
+
+      // Event listeners
       userInput.addEventListener("keypress", function (e) {
-        if (e.key === "Enter") {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
           sendMessage();
         }
       });
@@ -152,6 +306,15 @@
           const q = btn.getAttribute("data-question");
           sendMessage(q);
         });
+      });
+
+      // Auto-focus on input click
+      userInput.addEventListener("focus", () => {
+        document.querySelector(".chat-input-area").classList.add("focused");
+      });
+
+      userInput.addEventListener("blur", () => {
+        document.querySelector(".chat-input-area").classList.remove("focused");
       });
     </script>
   </body>
