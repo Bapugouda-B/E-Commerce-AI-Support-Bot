@@ -47,7 +47,7 @@ This project implements an intelligent customer support assistant using:
 
 ### Create virtual environment
 
-`conda create -n myenvname python=3.9.13`
+`conda create -n ecommerce-genai python=3.9.13`
 `conda activate ecommerce-genai`
 
 ### Install dependencies
